@@ -1,0 +1,28 @@
+# --- Web API ---
+fastapi
+uvicorn
+
+# --- HTTP / Validation ---
+requests
+pydantic>=2
+
+# --- LangChain & Embeddings ---
+langchain
+langchain-community
+langchain-huggingface
+chromadb
+sentence-transformers
+transformers
+huggingface-hub
+
+# --- ML Backend ---
+torch
+
+# --- Utilities ---
+attrs
+
+# --- Database (PostgreSQL via SQLAlchemy) ---
+SQLAlchemy
+
+# --- NLP ---
+fasttext
