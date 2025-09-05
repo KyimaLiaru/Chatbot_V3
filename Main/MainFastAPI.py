@@ -1,9 +1,11 @@
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from Common.DetectLanguage import detectlanguage
 from Common.CallLLM import queryLLM
+from Data import database
 from LLM.LLMRunner import (
     queryCategory,
     queryManual,
@@ -19,7 +21,7 @@ class Question(BaseModel):
 
 
 @app.post("/chat")
-def chat(question: Question):
+def chat(question: Question, db: Session=(Depends(database.get_db))):
     query = question.prompt.strip()
 
     print("👤 You: " + query)
@@ -40,7 +42,7 @@ def chat(question: Question):
     if category == "product":
         response = queryManual(query, lang)
     elif category == "policy":
-        response = queryApi(query, lang)
+        response = queryApi(db, query, lang)
     elif category == "general":
         response = queryGeneral(query, lang)
     else:

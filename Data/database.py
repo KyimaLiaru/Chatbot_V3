@@ -24,6 +24,8 @@ def get_db():
 
 # 연결 테스트용
 if __name__ == "__main__":
+    from ChatbotDB import updateDictionary
+
     try:
         with engine.begin() as conn:
             print("Count = ", conn.execute(text("SELECT COUNT(*) FROM chatbot_pattern_map")).scalar())

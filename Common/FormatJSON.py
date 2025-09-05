@@ -1,5 +1,5 @@
 # Function for extracting keys from the JSON API result
-def extract_json_keys(json):
+def extractJsonKeys(json):
     key_list = []
     i = 0
 
@@ -19,7 +19,7 @@ def extract_json_keys(json):
 
 
 # Function for re-formatting the JSON API result
-def format_json(data, keys, indent=0, idx_ref=[0], count=[0], lang="en"):
+def formatJson(data, keys, indent=0, idx_ref=[0], count=[0], lang="en"):
     # indent: used for adding indents at the front of each line
     # idx_ref: used for saving starting indexes of Array items
     space = "  " * indent
@@ -32,7 +32,7 @@ def format_json(data, keys, indent=0, idx_ref=[0], count=[0], lang="en"):
 
             if isinstance(v, (dict, list)):
                 lines.append(f"{space}- {label}:")
-                lines.extend(format_json(v, keys, indent + 1, idx_ref, count))
+                lines.extend(formatJson(v, keys, indent + 1, idx_ref, count))
             else:
                 if isinstance(v, str) and len(v) > 30:
                     if lang == "Korean":
@@ -49,7 +49,7 @@ def format_json(data, keys, indent=0, idx_ref=[0], count=[0], lang="en"):
         for i, item in enumerate(data, start=1):
             count[0] += 1
             lines.append(f"{space}{i}.")
-            lines.extend(format_json(item, keys, indent+1, idx_ref, count))
+            lines.extend(formatJson(item, keys, indent+1, idx_ref, count))
             if count[0] == length:
                 count[0] = 0
             elif i < len(data):

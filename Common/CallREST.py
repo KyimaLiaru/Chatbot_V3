@@ -8,7 +8,7 @@ headers = {
 }
 
 # Send HTTP Request to API Servers
-def send_request(url, method, body=None):
+def sendRequest(url, method, body=None):
     api_name, path = url.split("/", 1)
 
     # Send Request

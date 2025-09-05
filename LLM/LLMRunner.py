@@ -2,14 +2,17 @@ from attr.validators import instance_of
 from langchain_community.document_loaders import JSONLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sqlalchemy.dialects.postgresql import psycopg2
+from sqlalchemy.orm import Session
 
 import json
 
-from Common.CallREST import send_request
+from Common.CallREST import sendRequest
 from Common.GetErrorMessage import GetErrorMessage
-from Common.FormatJSON import format_json
+from Common.FormatJSON import extractJsonKeys, formatJson
 from Common.CallLLM import queryLLM
 from Common.DetectLanguage import detectlanguage
+
+import Data.ChatbotDB as ChatbotDB
 
 from Prompt import (
     category_prompt,
@@ -39,22 +42,13 @@ def queryManual(query: str, lang: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def queryApi(query: str, lang: str) -> str:
+def queryApi(db: Session, query: str, lang: str) -> str:
     # ------------ STEP 1 ------------
     # Get the list of known intents
     # --------------------------------
-    """
-    임시 주석처리 -- start
-    """
-    # try:
-    #     api_response = call_api.get_call("ARGOS_CHATBOT/admin/getIntentList")
-    #     intent_list = []
-    #     for item in api_response.get("data", []):
-    #         intent_list.append(item["intent"])
-    # except Exception as e:
-    #     return get_error_message(e)
+    intent_list = ChatbotDB.getIntentList(db)
 
-    intent_list = ['search_blacklist_policy', 'test_intent', 'search_firewall_policy', 'search_firewall_policy_detail', 'change_password', 'create_firewall_policy', 'get_admin_setting']
+    # intent_list = ['search_blacklist_policy', 'test_intent', 'search_firewall_policy', 'search_firewall_policy_detail', 'change_password', 'create_firewall_policy', 'get_admin_setting']
 
     # Analyze the intent and extract keywords
     first_prompt = policy_intent_prompt(intent_list, query)
@@ -77,7 +71,7 @@ def queryApi(query: str, lang: str) -> str:
     # --------------------------------
 
     # Fetch top 10 matching API from the ChromaDB
-    api_list_docs = api_vectorstore.similarity_search(query, k=10)
+    api_list_docs = apiSpecsVectorstore.similarity_search(query, k=10)
     api_list_context = "\n\n".join([doc.page_content for doc in api_list_docs])
 
     # Select the best API to call
@@ -98,10 +92,10 @@ def queryApi(query: str, lang: str) -> str:
 
     # Get Pattern RegEx from Chat.ONE API
     try:
-        pattern_map = call_api.send_request("ARGOS_CHATBOT/admin/getPatternMap", "Get")
+        pattern_map = sendRequest("ARGOS_CHATBOT/admin/getPatternMap", "Get")
         # print(json.dumps(pattern_map, ensure_ascii=False, indent=2))
     except Exception as e:
-        return get_error_message(e)
+        return GetErrorMessage(e)
 
     # Check if any required parameters are missing
     third_prompt = policy_parameter_prompt(selected_api_output, query, pattern_map, lang)
@@ -115,10 +109,10 @@ def queryApi(query: str, lang: str) -> str:
             # Try GET Request first
             url += param_check.get("param", "")
             body = param_check.get("body", "")
-            api_call_result = send_request(url, method, body if body else None)
+            api_call_result = sendRequest(url, method, body if body else None)
         except Exception as e:
             # If any form of exception is raised, return the error message
-            return get_error_message(e)[1]
+            return GetErrorMessage(e)[1]
     # If some required parameters are missing, return message looking for additional parameters or clarifications, if not send error message
     else:
         param_check_message = param_check.get("message", "")
@@ -132,7 +126,7 @@ def queryApi(query: str, lang: str) -> str:
     # --------------------------------
 
     # api_call_result_json = json.dumps(api_call_result, ensure_ascii=False, indent=2)
-    json_keys_list = extract_json_keys(api_call_result)
+    json_keys_list = extractJsonKeys(api_call_result)
 
     # Re-format the api result JSON keys into easily understandable word phrases
     api_name_context = selected_api_output.get('name', '')
@@ -140,7 +134,7 @@ def queryApi(query: str, lang: str) -> str:
     reformated_json_keys = queryLLM(fourth_prompt)
 
     # Format the final JSON based on the API Result and Word Phrases.
-    reformatted_result = "\n".join(format_json(api_call_result, reformated_json_keys))
+    reformatted_result = "\n".join(formatJson(api_call_result, reformated_json_keys))
 
     # ------------ STEP 5 ------------
     # Add starting/closing messages in front of/after the API result.
