@@ -2,9 +2,9 @@ from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-import database
-
-argos_db = Depends(database.get_db)
+# Setup Database Session
+from Data.database import get_db
+argos_db = Depends(get_db)
 
 def getPatternMap(db: Session):
     query = """

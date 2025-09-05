@@ -14,7 +14,7 @@ from Common.DetectLanguage import detectlanguage
 
 import Data.ChatbotDB as ChatbotDB
 
-from Prompt import (
+from LLM.Prompt import (
     category_prompt,
     product_prompt,
     general_prompt,
@@ -25,7 +25,7 @@ from Prompt import (
     policy_additional_messages
 )
 
-from RAGBuilder import loadManual, loadApiSpecs
+from LLM.RAGBuilder import loadManual, loadApiSpecs
 
 manualVectorstore = loadManual()
 apiSpecsVectorstore = loadApiSpecs()
@@ -47,6 +47,7 @@ def queryApi(db: Session, query: str, lang: str) -> str:
     # Get the list of known intents
     # --------------------------------
     intent_list = ChatbotDB.getIntentList(db)
+    print(f"intent list = {intent_list}")
 
     # intent_list = ['search_blacklist_policy', 'test_intent', 'search_firewall_policy', 'search_firewall_policy_detail', 'change_password', 'create_firewall_policy', 'get_admin_setting']
 

@@ -122,7 +122,7 @@ Parameters:
     return vectorstore
 
 def loadManual():
-    return preprocessManual("fireone_product_qa_combined_translated gpt.json", "chromaManualDB")
+    return preprocessManual("../Data/fireone_product_qa_combined_translated gpt.json", "chromaManualDB")
 
 def loadApiSpecs():
-    return preprocessApiSpecs("FireOne_API_List_v2.json", "chromaApiSpecsDB")
+    return preprocessApiSpecs("../Data/FireOne_API_List_v2.json", "chromaApiSpecsDB")

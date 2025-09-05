@@ -1,7 +1,7 @@
 import fasttext
 import os
 
-model_path = os.path.join(os.path.dirname(__file__), "lid.176.bin")
+model_path = os.path.join(os.path.dirname(__file__), "../Data/lid.176.bin")
 model = fasttext.load_model(model_path)
 
 def detectlanguage(text: str) -> str:

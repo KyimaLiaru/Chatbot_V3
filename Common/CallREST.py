@@ -1,5 +1,5 @@
 import requests
-from EnumAPI import ApiInfo
+from Common.EnumAPI import ApiInfo
 
 # HTTP Header (나중에 암호화? 필요)
 headers = {

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from Common.DetectLanguage import detectlanguage
 from Common.CallLLM import queryLLM
-from Data import database
+from Data.database import get_db
 from LLM.LLMRunner import (
     queryCategory,
     queryManual,
@@ -21,7 +21,7 @@ class Question(BaseModel):
 
 
 @app.post("/chat")
-def chat(question: Question, db: Session=(Depends(database.get_db))):
+def chat(question: Question, db: Session=(Depends(get_db))):
     query = question.prompt.strip()
 
     print("👤 You: " + query)
