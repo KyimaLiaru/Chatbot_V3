@@ -23,6 +23,9 @@ attrs
 
 # --- Database (PostgreSQL via SQLAlchemy) ---
 SQLAlchemy
+# psycopg2==2.9.9
+psycopg2-binary==2.9.9
+
 
 # --- NLP ---
 fasttext
