@@ -45,11 +45,11 @@ def chat(question: Question):
         response = queryGeneral(query, lang)
     else:
         prompt = f"""You are a professional translator for software applications.
-                Translate the given text into Korean, ensuring it sounds natural for a Korean software/system message.
+                Translate the given text into {lang}, ensuring it sounds natural for a Korean software/system message.
 
                 Rules:
                 - Use polite but concise formal tone, common in enterprise apps.
-                - Prefer "죄송합니다" for "Sorry," not awkward forms like "양해 바랍니다."
+                - When translating to Korean, prefer "죄송합니다" for "Sorry," not awkward forms like "양해 바랍니다."
                 - Keep the phrasing natural, short, and clear.
                 - Do not add explanations or rephrase meaning. Just translate.
 
