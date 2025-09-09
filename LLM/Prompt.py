@@ -1,77 +1,59 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #    - Prompt for categorizing the user input into product/policy/general -
 # ─────────────────────────────────────────────────────────────────────────────
-def general_prompt(query, lang):
-    return f"""
-    You are a professional cybersecurity AI assistant. Answer the user's general security question below.
-    Answer in {'Korean' if lang == 'ko' else 'English'}.
-
-    ### Output Format
-    {{
-        "response": Your response here
-    }}
-
-    ### User Question
-    Now process this user question.
-    {query}    
-    """
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-#    - Prompt for categorizing the user input into product/policy/general -
-# ─────────────────────────────────────────────────────────────────────────────
-def category_prompt(query: str) -> str:
+def category_prompt(intent, query: str) -> str:
     return f"""
     You are an intent classification assistant. Classify the user's question into one of the following three categories based on its purpose and content.
 
-    ### Categories:
-    Case 1. product: Questions about how to use BreezeWay FIRE.One. This includes:
-        - Explanations of menu, functions, or screens
-        - Location of pages with specific features or information
-        These are about **how the system works**, not what data it contains.
-    Case 2. policy: Questions that involve interactions with the database. This includes:
-        - Listing, searching, or querying firewall or security policies
-        - Asking for policy details or approval status
-        - Creating or modifying application or approval requests
-        - Asking for application info, account, user, or specific values
-        - Modifying configurations
-        - Or asking you to do any of the tasks above
-        These actions are **data-oriented questions** and usually require database or system queries.
-    Case 3. general: Other questions related to cybersecurity concepts, not specific to the product or its data. Return general if and only if the user input can not be categorized to case 1 or case 2.
-
+    ### Intent Classification Task
+    Here is a list of known intent:
+    {str(intent)}
+    
+    1. If the message is semantically close to any known intent, ALWAYS return that intent from the list.  
+       - The match does not need to be exact.  
+       - If it can reasonably be seen as a subtype or variation of an existing intent, still return that existing one.  
+       - Do NOT create a new intent if a relevant one already exists.
+    
+    2. IF AND ONLY IF no known intent is relevant at all, generate a new intent name in snake_case.  
+       - Keep it concise, descriptive, and consistent with the style of known intents.
+       
+   ### Categorization Task
+    - product: About how to use BreezeWay FIRE.One (menus, screens, features, navigation).
+    - policy: About data or system operations (listing, searching, creating, modifying firewall/security policies, approval requests, accounts, configurations).
+    - general: General cybersecurity questions not tied to the product or its data.
+    - other: None of the above.
+        
     ### Output Format:
-    Provide your answer in this JSON format:
+    Return JSON only:
     {{
-        "category": (One of [product, policy, general]),
-        "explanation": (Your answer goes here.) 
+        "category": (result from [Categorization Task]),
+        "intent": (result from [Intent Classification Task])
+        "explanation": (Explanation on your decisions.) 
     }}
 
     ### Example:
-    Here are some examples for classifying the user's intent:
-        **Example 1**
-        Question: "Where can I see the list of firewall policy requests?"
-        -> Output:
-        {{
-          "category": "product",
-          "explanation": "The user is asking where to locate the page or menu that shows firewall policies, not requesting the data itself."
-        }}
+    Question: "Where can I see the list of firewall policy requests?"
+    -> {{
+      "category": "product",
+      "intent": "firewall_policy_list_navigate",
+      "explanation": "The user is asking where to locate the page or menu that shows firewall policies, not requesting the data itself."
+    }}
 
-        **Example 2**
-        Question: "Can you give me the list of firewall policy requests?"
-        -> Output:
-        {{
-          "category": "policy",
-          "explanation": "The user is directly requesting system data (a list of firewall policies)."
-        }}
+    Question: "Can you give me the list of firewall policy requests?"
+    -> {{
+      "category": "policy",
+      "intent": "search_firewall_policy_list",
+      "explanation": "The user is directly requesting system data (a list of firewall policies)."
+    }}
 
-        **Example 3**
-        Question: "What is a firewall?"
-        -> Output:
-        {{
-          "category": "general",
-          "explanation": "This is a general cybersecurity question unrelated to the system."
-        }}
+    Question: "What is a firewall?"
+    -> {{
+      "category": "general",
+      "intent": "define_firewall",
+      "explanation": "This is a general cybersecurity question unrelated to the system."
+    }}
 
+    ### Task
     Now classify this question:
     {query}
     """
@@ -91,7 +73,7 @@ def product_prompt(context: str, query: str, lang: str) -> str:
 
     ### Output Format
     {{
-        "response": Your response here
+        "response": (Your response here.)
     }}
 
     ### User Question
@@ -99,10 +81,27 @@ def product_prompt(context: str, query: str, lang: str) -> str:
     \"\"\"{query}\"\"\"
     """
 
+# ─────────────────────────────────────────────────────────────────────────────
+#    - Prompt for generating an answer for general cybersecurity questions -
+# ─────────────────────────────────────────────────────────────────────────────
+def general_prompt(query, lang):
+    return f"""
+    You are a professional cybersecurity AI assistant. Generate a response to the user's message below.
+    Answer in {'Korean' if lang == 'ko' else 'English'}.
+
+    ### Output Format
+    {{
+        "response": (Your response here.)
+    }}
+
+    ### Task
+    Now process this user message.
+    {query}    
+    """
 
 # ─────────────────────────────────────────────────────────────────────────────
 #   - Prompt for extracting the intent and keywords from the user question -
-#           The result will be saved in a database for offline use.
+#           NO LONGER USED
 # ─────────────────────────────────────────────────────────────────────────────
 
 def policy_intent_prompt(context, query: str) -> str:
@@ -250,7 +249,7 @@ def policy_parameter_prompt(context, query: str, pattern_map: str, lang: str) ->
     - When it is ambiguous to determine what the provided parameters are
 
     2-1 "param": ""
-    - When there are no field of "parameter" type required based on the API information
+    - When there are no field of "parameter" type required based on the API information (ALWAYS include question mark in the beginning of the string.)
     2-2. "param": "?(Parameter Field Key Name)=(Parameter Field Value)"
     - When there is a field of "parameter" type required and when it is provided in the user message, return a string value in following format with parenthesis replaced with its corresponding value.
         - Example:
@@ -337,4 +336,22 @@ def policy_additional_messages(query, response, lang: str):
     - Keep the original chatbot response unchanged in the middle element.
     - If you choose not to add a closing message, still include an empty string "" as the third element.
     - Do not add any detailed information in any messages.
+    """
+# ─────────────────────────────────────────────────────────────────────────────
+#              - Prompt for translating messages -
+# ─────────────────────────────────────────────────────────────────────────────
+def translate_sentences(query, lang: str):
+    return f"""You are a professional translator for software applications.
+    Translate the given text into {lang}, ensuring it sounds natural for a {lang} software/system message.
+
+    ### Rules:
+    - Use polite but concise formal tone, common in enterprise apps.
+    - When translating apologies into Korean, prefer "죄송합니다" for "Sorry," not awkward forms like "양해 바랍니다."
+    - Keep the phrasing natural, short, and clear.
+    - Do not add explanations or rephrase meaning. Just translate.
+    - Use this exact structure and order:
+    {{"response": (translated sentence goes here.)}}
+
+    ### Task
+    Process this text: {query}
     """

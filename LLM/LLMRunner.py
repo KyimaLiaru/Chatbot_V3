@@ -1,3 +1,5 @@
+from lib2to3.pygram import pattern_grammar
+
 from attr.validators import instance_of
 from langchain_community.document_loaders import JSONLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -12,8 +14,9 @@ from Common.FormatJSON import extractJsonKeys, formatJson
 from Common.CallLLM import queryLLM
 from Common.DetectLanguage import detectlanguage
 
-import Data.ChatbotDB as ChatbotDB
+import Data.ChatbotDB as repo
 
+from LLM.RAGBuilder import loadManual, loadApiSpecs
 from LLM.Prompt import (
     category_prompt,
     product_prompt,
@@ -22,52 +25,52 @@ from LLM.Prompt import (
     policy_api_mapping_prompt,
     policy_parameter_prompt,
     policy_result_keys_format_prompt,
-    policy_additional_messages
+    policy_additional_messages,
+    translate_sentences
 )
 
-from LLM.RAGBuilder import loadManual, loadApiSpecs
+
 
 manualVectorstore = loadManual()
 apiSpecsVectorstore = loadApiSpecs()
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-def queryManual(query: str, lang: str) -> str:
+def queryCategory(db: Session, query: str):
+    # docs = manualVectorstore.similarity_search(query, k=5)
+    # context = "\n".join([doc.page_content for doc in docs])
+    # print("🔍 Category: ", context)
+
+    intent_list = repo.getIntentList(db)
+    print(f"intent list = {intent_list}")
+
+    prompt = category_prompt(intent_list, query)
+    category_result = queryLLM(prompt)
+
+    category = category_result.get("category", "")
+    intent = category_result.get("intent", "")
+
+    if category.find("product") == 0:
+        return intent, "product"
+    elif category.find("policy") == 0:
+        return intent, "policy"
+    else:
+        return intent, "general"
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+def queryManual(query: str, lang: str):
     docs = manualVectorstore.similarity_search(query, k=3)
     context = "\n\n".join([doc.page_content for doc in docs])
 
     prompt = product_prompt(context, query, lang)
+    # TODO: intent 수정 필요
     return queryLLM(prompt).get("response")
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-
-def queryApi(db: Session, query: str, lang: str) -> str:
+def queryApi(db: Session, query: str, intent: str, lang: str):
     # ------------ STEP 1 ------------
-    # Get the list of known intents
-    # --------------------------------
-    intent_list = ChatbotDB.getIntentList(db)
-    print(f"intent list = {intent_list}")
-
-    # intent_list = ['search_blacklist_policy', 'test_intent', 'search_firewall_policy', 'search_firewall_policy_detail', 'change_password', 'create_firewall_policy', 'get_admin_setting']
-
-    # Analyze the intent and extract keywords
-    first_prompt = policy_intent_prompt(intent_list, query)
-    dictionary_output = queryLLM(first_prompt)
-
-    print(dictionary_output)
-
-    # Keep the output for saving dictionary info into DB later
-    # TODO: Save the extracted keywords to the Database
-
-    intent = dictionary_output.get("intent", "")
-    dictionary = dictionary_output.get("keywords", "")
-
-    print(f"✅ Intent Detected: {intent}")
-    """
-    임시 주석처리 -- end
-    """
-    # ------------ STEP 2 ------------
     # Find the most suitable API information to call from the list
     # --------------------------------
 
@@ -87,16 +90,12 @@ def queryApi(db: Session, query: str, lang: str) -> str:
 
     print(f"📌 Selected API Info: url = {url}, method = {method}, parameters = {parameters}, body = {body}")
 
-    # ------------ STEP 3 ------------
+    # ------------ STEP 2 ------------
     # Check for missing required parameters
     # --------------------------------
 
-    # Get Pattern RegEx from Chat.ONE API
-    try:
-        pattern_map = sendRequest("ARGOS_CHATBOT/admin/getPatternMap", "Get")
-        # print(json.dumps(pattern_map, ensure_ascii=False, indent=2))
-    except Exception as e:
-        return GetErrorMessage(e)
+    # Get Pattern RegEx from DB
+    pattern_map = repo.getPatternMap(db)
 
     # Check if any required parameters are missing
     third_prompt = policy_parameter_prompt(selected_api_output, query, pattern_map, lang)
@@ -122,7 +121,7 @@ def queryApi(db: Session, query: str, lang: str) -> str:
         return param_check_message
 
 
-    # ------------ STEP 4 ------------
+    # ------------ STEP 3 ------------
     # Format the Fire.ONE API output for easy readability
     # --------------------------------
 
@@ -137,7 +136,7 @@ def queryApi(db: Session, query: str, lang: str) -> str:
     # Format the final JSON based on the API Result and Word Phrases.
     reformatted_result = "\n".join(formatJson(api_call_result, reformated_json_keys))
 
-    # ------------ STEP 5 ------------
+    # ------------ STEP 4 ------------
     # Add starting/closing messages in front of/after the API result.
     # --------------------------------
 
@@ -148,33 +147,21 @@ def queryApi(db: Session, query: str, lang: str) -> str:
     message_result = queryLLM(fifth_prompt).get("result")
     message_result[1] = reformatted_result
 
+
+    result = "\n\n".join(message_result)
     # return message_result
-    return "\n\n".join(message_result)
+    return result
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-def queryGeneral(query: str, lang: str) -> str:
+def queryGeneral(query: str, lang: str):
     prompt = general_prompt(query, lang)
     return queryLLM(prompt).get("response")
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-def queryCategory(query: str) -> str:
-    """Uses Mistral via Ollama to classify the user's intent"""
-    docs = manualVectorstore.similarity_search(query, k=5)
-    context = "\n".join([doc.page_content for doc in docs])
-    # print("🔍 Category: ", context)
-
-    prompt = category_prompt(query)
-
-    result = queryLLM(prompt)
-    # print(result)
-    category = result.get("category", "")
-
-    if category.find("product") == 0:
-        return "product"
-    elif category.find("policy") == 0:
-        return "policy"
-    else:
-        return "general"
+def translateSentence(query, lang):
+    prompt = translate_sentences(query, lang)
+    result = queryLLM(prompt).get("response")
+    return result

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 # Setup Database Session
 from Data.database import get_db
+from Data.schema import ChatObject
+
 argos_db = Depends(get_db)
 
 def getPatternMap(db: Session):
@@ -49,7 +51,6 @@ def updateDictionary(db: Session, intent, keywords, threshold=9):
             result.append(word)
 
     dictionary = " ".join(result)
-
     # print(dictionary)
 
     query = """
@@ -61,11 +62,22 @@ def updateDictionary(db: Session, intent, keywords, threshold=9):
     # db.commit()
     return result.rowcount
 
-def insertMessageHistory(db: Session, empno, sender, message):
+def getMessageHistory(db: Session, empno) -> list[ChatObject]:
     query = """
-        INSERT INTO argos_chatbot.chatbot_message_history (empno, sender, message)
-        VALUES (:empno, :sender, :message)
+        SELECT empno, sender, message, sent_at, intent
+        FROM argos_chatbot.chatbot_message_history
+        WHERE empno=:empno
         """
-    result = db.execute(text(query), {"empno":empno, "sender":sender, "message":message}).scalar_one()
+    result = db.execute(text(query), {"empno":empno}).mappings().all()
+    print(f"flag ====== {empno}")
+    print(result)
+    return [ChatObject.model_validate(r) for r in result]
+
+def insertMessageHistory(db: Session, request: ChatObject):
+    query = """
+        INSERT INTO argos_chatbot.chatbot_message_history (empno, sender, message, sent_at, intent)
+        VALUES (:empno, :sender, :message, COALESCE(:sent_at, clock_timestamp()), :intent)
+        """
+    result = db.execute(text(query), request.model_dump())
     # db.commit()
     return result.rowcount

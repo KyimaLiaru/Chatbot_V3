@@ -1,10 +1,10 @@
 # --- Web API ---
-fastapi
-uvicorn
+fastapi>=0.110
+uvicorn[standard]>=0.23
 
 # --- HTTP / Validation ---
-requests
-pydantic>=2
+requests>=2.31
+pydantic>=2,<3
 
 # --- LangChain & Embeddings ---
 langchain
@@ -17,15 +17,17 @@ huggingface-hub
 
 # --- ML Backend ---
 torch
+numpy==1.26.4
 
 # --- Utilities ---
 attrs
+pybind11>=2.10
 
 # --- Database (PostgreSQL via SQLAlchemy) ---
-SQLAlchemy
-# psycopg2==2.9.9
+SQLAlchemy>=2,<3
 psycopg2-binary==2.9.9
-
+# psycopg2==2.9.9
 
 # --- NLP ---
-fasttext
+fasttext-wheel==0.9.2
+# fasttext==0.9.2

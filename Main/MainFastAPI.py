@@ -1,70 +1,20 @@
 import uvicorn
 from fastapi import FastAPI, Request, Depends
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from Common.DetectLanguage import detectlanguage
-from Common.CallLLM import queryLLM
+from Data.schema import ChatObject
 from Data.database import get_db
-from LLM.LLMRunner import (
-    queryCategory,
-    queryManual,
-    queryApi,
-    queryGeneral
-)
+import Service.ChatService as chatService
 
 app = FastAPI()
 
-
-class Question(BaseModel):
-    prompt: str
-
-
 @app.post("/chat")
-def chat(question: Question, db: Session=(Depends(get_db))):
-    query = question.prompt.strip()
+def chat(request: ChatObject, db: Session=(Depends(get_db))):
+    return chatService.chat(request, db)
 
-    print("👤 You: " + query)
-
-    if query.lower() == "exit":
-        print("👋 Exiting chatbot. Goodbye!")
-        return
-
-    # Step 0: Detect language
-    lang = detectlanguage(query)
-    print(f"🌐 Detected Language: {lang}")
-
-    # Step 1: Detect Category
-    category = queryCategory(query)
-    print(f"🔍 Category Detected: {category}")
-
-    # Step 2: Route based on category to extract intent
-    if category == "product":
-        response = queryManual(query, lang)
-    elif category == "policy":
-        response = queryApi(db, query, lang)
-    elif category == "general":
-        response = queryGeneral(query, lang)
-    else:
-        prompt = f"""You are a professional translator for software applications.
-                Translate the given text into {lang}, ensuring it sounds natural for a Korean software/system message.
-
-                Rules:
-                - Use polite but concise formal tone, common in enterprise apps.
-                - When translating to Korean, prefer "죄송합니다" for "Sorry," not awkward forms like "양해 바랍니다."
-                - Keep the phrasing natural, short, and clear.
-                - Do not add explanations or rephrase meaning. Just translate.
-
-                Text: Sorry, this type of question is not supported yet.
-                """
-
-        response = queryLLM(prompt).get("response")
-
-    # Step 4: Display final response
-    print(f"\n🤖 Bot: {response}\n")
-
-    return response
-
+@app.get("/getMessageHistory", response_model=list[ChatObject])
+def getMessageHistory(empno: str, db: Session=(Depends(get_db))):
+    return chatService.getMessageHistory(db, empno)
 
 # 현재 파일을 직접 실행 시 1번 안 해도 됨.
 if __name__ == "__main__":

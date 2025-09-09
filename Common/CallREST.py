@@ -11,11 +11,15 @@ headers = {
 def sendRequest(url, method, body=None):
     api_name, path = url.split("/", 1)
 
+    url=f"{ApiInfo[api_name].value}{path}"
+
+    print(f"url: {url}, method: {method}, body: {body}")
+
     # Send Request
     if method.lower() == "get":
-        response = requests.get(url=f"{ApiInfo[api_name].value}{path}", headers=headers)
+        response = requests.get(url=url, headers=headers)
     elif method.lower() == 'post':
-        response = requests.post(url=f"{ApiInfo[api_name].value}{path}", json=body, headers=headers)
+        response = requests.post(url=url, json=body, headers=headers)
     else: # Other methods like Del or Patch could be added later
         raise Exception(None, "Method not supported.")
 
