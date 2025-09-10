@@ -2,18 +2,30 @@ import uvicorn
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.orm import Session
 
+from Common.EnumAPI import ModuleInfo
 from Data.schema import ChatObject
-from Data.database import get_db
+from Data.ChatbotDB import getModuleInfo
+from Data.database import SessionLocal, get_argos_db
 import Service.ChatService as chatService
 
 app = FastAPI()
 
+@app.on_event("startup")
+def init_module_registry():
+    with SessionLocal() as db:
+        try:
+            ModuleInfo.set_map(getModuleInfo(db))
+            print("Chat.ONE | Fire.ONE Modules Successfully Loaded.")
+        except Exception as e:
+            print("Chat.ONE | Failed to load Fire.ONE Modules, Please restart the project.")
+
+
 @app.post("/chat")
-def chat(request: ChatObject, db: Session=(Depends(get_db))):
+def chat(request: ChatObject, db: Session=(Depends(get_argos_db))):
     return chatService.chat(request, db)
 
 @app.get("/getMessageHistory", response_model=list[ChatObject])
-def getMessageHistory(empno: str, db: Session=(Depends(get_db))):
+def getMessageHistory(empno: str, db: Session=(Depends(get_argos_db))):
     return chatService.getMessageHistory(db, empno)
 
 # 현재 파일을 직접 실행 시 1번 안 해도 됨.

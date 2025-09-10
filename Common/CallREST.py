@@ -1,5 +1,5 @@
 import requests
-from Common.EnumAPI import ApiInfo
+from Common.EnumAPI import ApiInfo, ModuleInfo
 
 # HTTP Header (나중에 암호화? 필요)
 headers = {
@@ -9,11 +9,12 @@ headers = {
 
 # Send HTTP Request to API Servers
 def sendRequest(url, method, body=None):
-    api_name, path = url.split("/", 1)
+    api_code, path = url.split("/", 1)
+    api_url = ModuleInfo.get(api_code)
 
-    url=f"{ApiInfo[api_name].value}{path}"
-
-    print(f"url: {url}, method: {method}, body: {body}")
+    # url=f"{ApiInfo[api_code].value}{path}"
+    url=f"{api_url}/{path}"
+    # print(f"url = {url}")
 
     # Send Request
     if method.lower() == "get":

@@ -8,6 +8,7 @@ def queryLLM(query: str, model: str = "mistral", temperature: float = 0.2, retry
         "model": model,
         "prompt": query,
         "temperature": temperature,
+        "format": "json",
         "stream": False
     }
 
@@ -31,21 +32,22 @@ def queryLLM(query: str, model: str = "mistral", temperature: float = 0.2, retry
         response = requests.post("http://localhost:11434/api/generate", json=payload, stream=False, timeout=60)
         response.raise_for_status()
 
-        result = response.json()
-        full_response = result.get("response", "").strip().replace("'", '\\\"')
+        result = response.json()["response"]
+        # full_response = result.get("response", "").strip().replace("'", '\\\"')
 
-        print("\nflag =====bot start===========")
-        try:
-            print(json.dumps(json.loads(full_response), ensure_ascii=False, indent=2))
-        except Exception as e:
-            print("NO JSON")
-            print(full_response)
-        print("===========bot end============\n")
+
+        # print("\nflag =====bot start===========")
+        # try:
+        #     print(json.dumps(json.loads(result), ensure_ascii=False, indent=2))
+        # except Exception as e:
+        #     print("NO JSON")
+        #     print(result)
+        # print("===========bot end============\n")
 
         try:
-            return json.loads(full_response)
+            return json.loads(result)
         except Exception as e:
-            print("AI returned non-JSON object, trying again...")
+            print("Chat.ONE | LLM returned non-JSON object, trying again...")
             retry[0] += 1
             if retry[0] < 10:
                 return queryLLM(query, model, temperature, retry)
@@ -54,4 +56,4 @@ def queryLLM(query: str, model: str = "mistral", temperature: float = 0.2, retry
 
     except Exception as e:
         return GetErrorMessage(e)
-        # print(f"❌ Error querying model: {str(e)}")
+        # print(f"Chat.ONE | Error querying model: {str(e)}")

@@ -296,14 +296,16 @@ def policy_result_keys_format_prompt(context: str, query: str, lang: str):
     return f"""I will give you a list of abbreviated words, and I want you to expand it into meaningful full words.
     Capitalize the first letter of each word if the result is in English.
 
-    You MUST only return the result without any additional explanations. Always output the result in Array format. Do not add any additional explanations.
+    ### Rules
+    - You MUST only return the result without any additional explanations.
+    - ALWAYS output the result in Array format. Do not add any additional explanations.
 
     ### Example:
-    Word List: ["empno", "reqIdx", "created_at"]
-    -> Output: ["Employee Number", "Request ID", "Date of Creation"]
+    -> Output: {{["Employee Number", "Request ID", "Date of Creation"]}}
 
     ### Important:
     - The following words have specific meanings. Always refer to the following words:
+        - empno = Employee Number
         - idx or id = ID
         - sledge = Security Pledge
         - auth = Authority

@@ -17,22 +17,22 @@ from LLM.LLMRunner import (
 
 def main():
     sleep(1)  # 깔끔하게 출력시키기 위한 sleep
-    print("🔥 FIRE.One Chatbot (RAG + Mistral + Language Aware)")
+    print("Chat.ONE | FIRE.One Chatbot (RAG + Mistral + Language Aware)")
     while True:
         query = input("👤 Type your question (or 'exit' to quit): ")
         if query.lower() == "exit":
-            print("👋 Exiting chatbot. Goodbye!")
+            print("Chat.ONE | Exiting chatbot. Goodbye!")
             break
 
         start = time.time()
 
         # Step 0: Detect language
         lang = detectlanguage(query)
-        print(f"🌐 Detected Language: {lang}")
+        print(f"Chat.ONE | Detected Language: {lang}")
 
         # Step 1: Detect Category
         category = queryCategory(query)
-        print(f"🔍 Category Detected: {category}")
+        print(f"Chat.ONE | Category Detected: {category}")
 
         # Step 2: Route based on category to extract intent
         if category == "product":
@@ -60,10 +60,10 @@ def main():
         # response = queryLLM(query=query, context=context, lang=lang)
 
         # Step 4: Display final response
-        print(f"\n🤖 Bot: {response}\n")
+        print(f"Chat.ONE | Bot: {response}\n")
 
         end = time.time()
-        print(f"실행 시간: {end - start:.4f}초")
+        print(f"Chat.ONE | 실행 시간: {end - start:.4f}초")
 
 
 if __name__ == "__main__":

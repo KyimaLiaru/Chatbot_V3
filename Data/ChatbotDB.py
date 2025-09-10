@@ -1,12 +1,14 @@
+from typing import Dict
+
 from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Setup Database Session
-from Data.database import get_db
-from Data.schema import ChatObject
+from Data.database import get_argos_db
+from Data.schema import ChatObject, ModuleObject
 
-argos_db = Depends(get_db)
+argos_db = Depends(get_argos_db)
 
 def getPatternMap(db: Session):
     query = """
@@ -69,8 +71,6 @@ def getMessageHistory(db: Session, empno) -> list[ChatObject]:
         WHERE empno=:empno
         """
     result = db.execute(text(query), {"empno":empno}).mappings().all()
-    print(f"flag ====== {empno}")
-    print(result)
     return [ChatObject.model_validate(r) for r in result]
 
 def insertMessageHistory(db: Session, request: ChatObject):
@@ -81,3 +81,19 @@ def insertMessageHistory(db: Session, request: ChatObject):
     result = db.execute(text(query), request.model_dump())
     # db.commit()
     return result.rowcount
+
+def getModuleInfo(db: Session) -> Dict[str, ModuleObject]:
+    query = """
+    SELECT product_code, product_url_http, product_port
+    FROM argos_common.admin_api_setting
+    """
+    result = db.execute(text(query)).mappings().all()
+
+    moduleDict: Dict[str, ModuleObject] = {}
+    for r in result:
+        moduleDict[r["product_code"]] = ModuleObject(
+            product_code=r["product_code"],
+            product_url_http=r["product_url_http"],
+            product_port=r["product_port"],
+        )
+    return moduleDict

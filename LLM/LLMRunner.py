@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.orm import Session
 
 import json
+import re
 
 from Common.CallREST import sendRequest
 from Common.GetErrorMessage import GetErrorMessage
@@ -37,12 +38,7 @@ apiSpecsVectorstore = loadApiSpecs()
 # ─────────────────────────────────────────────────────────────────────────────
 
 def queryCategory(db: Session, query: str):
-    # docs = manualVectorstore.similarity_search(query, k=5)
-    # context = "\n".join([doc.page_content for doc in docs])
-    # print("🔍 Category: ", context)
-
     intent_list = repo.getIntentList(db)
-    print(f"intent list = {intent_list}")
 
     prompt = category_prompt(intent_list, query)
     category_result = queryLLM(prompt)
@@ -50,12 +46,14 @@ def queryCategory(db: Session, query: str):
     category = category_result.get("category", "")
     intent = category_result.get("intent", "")
 
-    if category.find("product") == 0:
-        return intent, "product"
-    elif category.find("policy") == 0:
-        return intent, "policy"
-    else:
-        return intent, "general"
+    return intent, category
+
+    # if category.find("product") == 0:
+    #     return intent, "product"
+    # elif category.find("policy") == 0:
+    #     return intent, "policy"
+    # else:
+    #     return intent, "general"
 
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -73,9 +71,12 @@ def queryApi(db: Session, query: str, intent: str, lang: str):
     # ------------ STEP 1 ------------
     # Find the most suitable API information to call from the list
     # --------------------------------
-
+    print("Chat.ONE | ==== STEP 1 ====")
     # Fetch top 10 matching API from the ChromaDB
-    api_list_docs = apiSpecsVectorstore.similarity_search(query, k=10)
+
+    search = re.sub(r'[_\-]+', ' ', intent).strip()
+
+    api_list_docs = apiSpecsVectorstore.similarity_search(search, k=10)
     api_list_context = "\n\n".join([doc.page_content for doc in api_list_docs])
 
     # Select the best API to call
@@ -88,12 +89,12 @@ def queryApi(db: Session, query: str, intent: str, lang: str):
     parameters = selected_api_output.get("param", [])
     body = selected_api_output.get("body", [])
 
-    print(f"📌 Selected API Info: url = {url}, method = {method}, parameters = {parameters}, body = {body}")
+    print(f"Chat.ONE | Selected API Info: url = {url}, method = {method}, parameters = {parameters}, body = {body}")
 
     # ------------ STEP 2 ------------
     # Check for missing required parameters
     # --------------------------------
-
+    print("Chat.ONE | ==== STEP 2 ====")
     # Get Pattern RegEx from DB
     pattern_map = repo.getPatternMap(db)
 
@@ -117,29 +118,32 @@ def queryApi(db: Session, query: str, intent: str, lang: str):
     else:
         param_check_message = param_check.get("message", "")
         if param_check_message == "":
-            return "❌ Internal server error occurred, please try again."
+            return "Chat.ONE | Internal server error occurred, please try again."
         return param_check_message
 
 
     # ------------ STEP 3 ------------
     # Format the Fire.ONE API output for easy readability
     # --------------------------------
-
+    print("Chat.ONE | ==== STEP 3 ====")
     # api_call_result_json = json.dumps(api_call_result, ensure_ascii=False, indent=2)
     json_keys_list = extractJsonKeys(api_call_result)
+    print(f"JSON KEYS = {json_keys_list}")
 
     # Re-format the api result JSON keys into easily understandable word phrases
     api_name_context = selected_api_output.get('name', '')
     fourth_prompt = policy_result_keys_format_prompt(api_name_context, json_keys_list, "")
     reformated_json_keys = queryLLM(fourth_prompt)
 
+    reformatted_keys_list = extractJsonKeys(reformated_json_keys)
+
     # Format the final JSON based on the API Result and Word Phrases.
-    reformatted_result = "\n".join(formatJson(api_call_result, reformated_json_keys))
+    reformatted_result = "\n".join(formatJson(api_call_result, reformatted_keys_list))
 
     # ------------ STEP 4 ------------
     # Add starting/closing messages in front of/after the API result.
     # --------------------------------
-
+    print("Chat.ONE | ==== STEP  4====")
     message_result = ["Here is the detail for your request:", reformatted_result, "Feel free to ask me any other questions."]
 
     fifth_prompt = policy_additional_messages(query, reformatted_result, lang)

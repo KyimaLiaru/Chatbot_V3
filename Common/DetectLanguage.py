@@ -15,5 +15,5 @@ def detectlanguage(text: str) -> str:
         else:
             return "English"
     except Exception as e:
-        print(f"[Language Detection Error] {e}")
+        print(f"Chat.ONE | Language Detection Error: {e}")
         return "en"

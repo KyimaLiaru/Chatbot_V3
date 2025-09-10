@@ -6,30 +6,29 @@ import LLM.LLMRunner as llm
 
 def chat(request: ChatObject, db):
     # if query.lower() == "exit":
-    #     print("👋 Exiting chatbot. Goodbye!")
+    #     print("Chat.ONE | Exiting chatbot. Goodbye!")
     #     return
 
     query = request.message.strip()
-    print(f"👤 {request.empno}: {query}")
+    print(f"Chat.ONE | {request.empno}: {query}")
 
     temp = repo.insertMessageHistory(db, request)
-    print(f"1st DB Update result = {temp}")
 
     # Step 0: Detect language
     lang = detectlanguage(query)
-    print(f"🌐 Detected Language: {lang}")
+    print(f"Chat.ONE | Detected Language: {lang}")
 
     # Step 1: Detect Category
     intent, category = llm.queryCategory(db, query)
-    print(f"🔍 Category Detected: {category}")
-    print(f"🔍 Intent Detected: {intent}")
+    print(f"Chat.ONE | Category Detected: {category}")
+    print(f"Chat.ONE | Intent Detected: {intent}")
 
     # Step 2: Route based on category to extract intent
     if category == "product":
         message = llm.queryManual(query, lang)
     elif category == "policy":
         message = "Sorry, this type of question is not supported yet."
-        if lang != "en":
+        if lang != "English":
             message = llm.translateSentence(message, lang)
         intent = ""
         # 나중에 API 완료 되면 주석 해제하기...............
@@ -39,12 +38,12 @@ def chat(request: ChatObject, db):
         intent = None
     else:
         message = "Sorry, I could not understand what that means. Could you please rephrase your message?"
-        if lang != "en":
+        if lang != "English":
             message = llm.translateSentence(message, lang)
         intent = ""
 
     # Step 4: Display final response
-    print(f"\n🤖 Bot: {message}\n")
+    print(f"Chat.ONE | Bot: {message}\n")
 
     response = ChatObject(
         empno=request.empno,

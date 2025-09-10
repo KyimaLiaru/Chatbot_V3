@@ -76,7 +76,7 @@ def preprocessApiSpecs(json_path, persist_dir):
         api_name = entry.get("api_name_en", "")
         api_path = entry.get("api_path", "")
         api_method = entry.get("method", "")
-        api_url = entry.get("api_url", "")
+        api_code = entry.get("api_code", "")
 
         parameters = entry.get("parameters", [])
         param_texts = []
@@ -95,7 +95,7 @@ def preprocessApiSpecs(json_path, persist_dir):
 
         full_text = f"""
 API Name: {api_name}
-API URL: {api_url}{api_path}
+API URL: {api_code}{api_path}
 Method: {api_method}
 Parameters:
 {param_summary}
