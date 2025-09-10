@@ -22,5 +22,4 @@ build/
 .coverage
 
 Data/*.json
-Common/EnumAPI.py
 /Data/*.bin
