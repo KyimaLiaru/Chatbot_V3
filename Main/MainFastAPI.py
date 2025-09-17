@@ -2,11 +2,11 @@ import uvicorn
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.orm import Session
 
-from Common.EnumAPI import ModuleInfo
-from Data.schema import ChatObject
-from Data.ChatbotDB import getModuleInfo
-from Data.database import SessionLocal, get_argos_db
-import Service.ChatService as chatService
+from Chatbot.Common.EnumAPI import ModuleInfo
+from Chatbot.Data.schema import ChatObject
+from Chatbot.Data.ChatbotDB import getModuleInfo
+from Chatbot.Data.database import SessionLocal, get_argos_db
+import Chatbot.Service.ChatService as ChatService
 
 app = FastAPI()
 
@@ -22,11 +22,11 @@ def init_module_registry():
 
 @app.post("/chat")
 def chat(request: ChatObject, db: Session=(Depends(get_argos_db))):
-    return chatService.chat(request, db)
+    return ChatService.chat(request, db)
 
 @app.get("/getMessageHistory", response_model=list[ChatObject])
 def getMessageHistory(empno: str, db: Session=(Depends(get_argos_db))):
-    return chatService.getMessageHistory(db, empno)
+    return ChatService.getMessageHistory(db, empno)
 
 # 현재 파일을 직접 실행 시 1번 안 해도 됨.
 if __name__ == "__main__":

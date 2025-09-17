@@ -1,13 +1,10 @@
 from time import sleep
 
-import json
 import time
 
-from torch.utils.data.datapipes.gen_pyi import split_outside_bracket
-
-from Common.DetectLanguage import detectlanguage
-from Common.CallLLM import queryLLM
-from LLM.LLMRunner import (
+from Chatbot.Common.DetectLanguage import detectlanguage
+from Chatbot.Common.CallLLM import queryLLM
+from Chatbot.LLM.LLMRunner import (
     queryCategory,
     queryManual,
     queryApi,

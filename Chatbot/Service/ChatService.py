@@ -1,8 +1,8 @@
-from Common.DetectLanguage import detectlanguage
+from Chatbot.Common.DetectLanguage import detectlanguage
 
-from Data.schema import ChatObject
-import Data.ChatbotDB as repo
-import LLM.LLMRunner as llm
+from Chatbot.Data.schema import ChatObject
+import Chatbot.Data.ChatbotDB as repo
+import Chatbot.LLM.LLMRunner as llm
 
 def chat(request: ChatObject, db):
     # if query.lower() == "exit":

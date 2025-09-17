@@ -1,7 +1,7 @@
 import requests
 import json
 
-from Common.GetErrorMessage import GetErrorMessage
+from Chatbot.Common.GetErrorMessage import GetErrorMessage
 
 def queryLLM(query: str, model: str = "mistral", temperature: float = 0.2, retry=[0]):
     payload = {
@@ -34,7 +34,6 @@ def queryLLM(query: str, model: str = "mistral", temperature: float = 0.2, retry
 
         result = response.json()["response"]
         # full_response = result.get("response", "").strip().replace("'", '\\\"')
-
 
         # print("\nflag =====bot start===========")
         # try:

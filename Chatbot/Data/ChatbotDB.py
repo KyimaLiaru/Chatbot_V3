@@ -4,9 +4,8 @@ from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-# Setup Database Session
-from Data.database import get_argos_db
-from Data.schema import ChatObject, ModuleObject
+from Chatbot.Data.database import get_argos_db
+from Chatbot.Data.schema import ChatObject, ModuleObject
 
 argos_db = Depends(get_argos_db)
 

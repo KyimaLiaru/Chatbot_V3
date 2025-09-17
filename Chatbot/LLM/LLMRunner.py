@@ -1,28 +1,19 @@
-from lib2to3.pygram import pattern_grammar
-
-from attr.validators import instance_of
-from langchain_community.document_loaders import JSONLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.orm import Session
 
-import json
 import re
 
-from Common.CallREST import sendRequest
-from Common.GetErrorMessage import GetErrorMessage
-from Common.FormatJSON import extractJsonKeys, formatJson
-from Common.CallLLM import queryLLM
-from Common.DetectLanguage import detectlanguage
+from Chatbot.Common.CallREST import sendRequest
+from Chatbot.Common.GetErrorMessage import GetErrorMessage
+from Chatbot.Common.FormatJSON import extractJsonKeys, formatJson
+from Chatbot.Common.CallLLM import queryLLM
 
-import Data.ChatbotDB as repo
+import Chatbot.Data.ChatbotDB as repo
 
-from LLM.RAGBuilder import loadManual, loadApiSpecs
-from LLM.Prompt import (
+from Chatbot.LLM.RAGBuilder import loadManual, loadApiSpecs
+from Chatbot.LLM.Prompt import (
     category_prompt,
     product_prompt,
     general_prompt,
-    policy_intent_prompt,
     policy_api_mapping_prompt,
     policy_parameter_prompt,
     policy_result_keys_format_prompt,

@@ -1,5 +1,5 @@
 import requests
-from Common.EnumAPI import ApiInfo, ModuleInfo
+from Chatbot.Common.EnumAPI import ModuleInfo
 
 # HTTP Header (나중에 암호화? 필요)
 headers = {

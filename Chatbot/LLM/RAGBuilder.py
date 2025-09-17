@@ -121,8 +121,20 @@ Parameters:
     )
     return vectorstore
 
+dataFolder = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "Data")
+
 def loadManual():
-    return preprocessManual("../Data/fireone_product_qa_combined_translated gpt.json", "../Data/chromaManualDB")
+    dataFileName = "fireone_product_qa_combined_translated_gpt.json"
+    dataStoreName = "chromaManualDB"
+
+    dataFilePath = os.path.join(dataFolder, dataFileName)
+    dataStorePath = os.path.join(dataFolder, dataStoreName)
+    return preprocessManual(dataFilePath, dataStorePath)
 
 def loadApiSpecs():
-    return preprocessApiSpecs("../Data/FireOne_API_List_v2.json", "../Data/chromaApiSpecsDB")
+    dataFileName = "FireOne_API_List_v2.json"
+    dataStoreName = "chromaApiSpecsDB"
+
+    dataFilePath = os.path.join(dataFolder, dataFileName)
+    dataStorePath = os.path.join(dataFolder, dataStoreName)
+    return preprocessApiSpecs(dataFilePath, dataStorePath)
