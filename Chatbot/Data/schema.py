@@ -1,6 +1,8 @@
+import re
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Tuple
 
 from pydantic import BaseModel, ConfigDict
 
@@ -23,3 +25,15 @@ class ModuleObject:
     def getUrl(self):
         # Ex) return "http://127.0.0.1:8190"
         return f"{self.product_url_http}:{self.product_port}"
+
+# 프로젝트 초기 로딩 시 Pattern 정보 오브젝트
+@dataclass
+class PatternObject:
+    id: int
+    pattern_name: str
+    pattern_regex: str
+
+    def getPattern(self) -> Tuple[int, str, re.Pattern]:
+        pattern = re.compile(self.pattern_regex)
+        # item: Dict[str, re.Pattern] = {self.pattern_name: pattern}
+        return self.id, self.pattern_name, pattern

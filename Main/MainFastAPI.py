@@ -2,9 +2,10 @@ import uvicorn
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.orm import Session
 
-from Chatbot.Common.EnumAPI import ModuleInfo
+from Chatbot.Common.GetErrorMessage import GetErrorMessage
+from Chatbot.Common.LoadInitData import ModuleInfo, PatternInfo
 from Chatbot.Data.schema import ChatObject
-from Chatbot.Data.ChatbotDB import getModuleInfo
+from Chatbot.Data.ChatbotDB import getModuleInfo, getPatternMap
 from Chatbot.Data.database import SessionLocal, get_argos_db
 import Chatbot.Service.ChatService as ChatService
 
@@ -15,9 +16,15 @@ def init_module_registry():
     with SessionLocal() as db:
         try:
             ModuleInfo.set_map(getModuleInfo(db))
-            print("Chat.ONE | Fire.ONE Modules Successfully Loaded.")
+            print("Chat.ONE | Fire.ONE modules successfully loaded.")
         except Exception as e:
-            print("Chat.ONE | Failed to load Fire.ONE Modules, Please restart the project.")
+            print("Chat.ONE | Failed to load Fire.ONE modules, Please restart the project.")
+
+        try:
+            PatternInfo.set_list(getPatternMap(db))
+            print("Chat.ONE | Chat.ONE pattern map successfully loaded.")
+        except Exception as e:
+            print("Chat.ONE | Failed to load Chat.ONE pattern map, Please restart the project.")
 
 
 @app.post("/chat")

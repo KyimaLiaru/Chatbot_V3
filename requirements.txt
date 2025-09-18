@@ -7,6 +7,7 @@ requests>=2.31
 pydantic>=2,<3
 
 # --- LangChain & Embeddings ---
+nltk==3.9.1
 langchain
 langchain-community
 langchain-huggingface

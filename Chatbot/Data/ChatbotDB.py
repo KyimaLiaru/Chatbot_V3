@@ -1,27 +1,33 @@
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from Chatbot.Data.database import get_argos_db
-from Chatbot.Data.schema import ChatObject, ModuleObject
+from Chatbot.Data.schema import ChatObject, ModuleObject, PatternObject
 
 argos_db = Depends(get_argos_db)
 
-def getPatternMap(db: Session):
+def getModuleInfo(db: Session) -> Dict[str, ModuleObject]:
+    query = """
+    SELECT product_code, product_url_http, product_port
+    FROM argos_common.admin_api_setting
+    """
+    result = db.execute(text(query)).mappings().all()
+    return { r["product_code"]: ModuleObject(**r) for r in result }
+
+def getPatternMap(db: Session) -> List[PatternObject]:
     query = """
         SELECT
             id,
             pattern_name,
-            pattern_regex,
-            pattern_description_en,
-            pattern_description_ko
+            pattern_regex
         FROM argos_chatbot.chatbot_pattern_map
         ORDER BY id ASC
         """
     result = db.execute(text(query)).mappings().all()
-    return [dict(r) for r in result]
+    return [PatternObject(**r) for r in result]
 
 def getIntentList(db: Session) -> list[str]:
     query = """
@@ -80,19 +86,3 @@ def insertMessageHistory(db: Session, request: ChatObject):
     result = db.execute(text(query), request.model_dump())
     # db.commit()
     return result.rowcount
-
-def getModuleInfo(db: Session) -> Dict[str, ModuleObject]:
-    query = """
-    SELECT product_code, product_url_http, product_port
-    FROM argos_common.admin_api_setting
-    """
-    result = db.execute(text(query)).mappings().all()
-
-    moduleDict: Dict[str, ModuleObject] = {}
-    for r in result:
-        moduleDict[r["product_code"]] = ModuleObject(
-            product_code=r["product_code"],
-            product_url_http=r["product_url_http"],
-            product_port=r["product_port"],
-        )
-    return moduleDict
