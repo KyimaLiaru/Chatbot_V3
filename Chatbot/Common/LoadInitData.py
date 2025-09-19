@@ -1,6 +1,5 @@
 import re
 
-from enum import Enum
 from typing import Dict, Optional, Iterable, List, Tuple
 
 from Chatbot.Data.schema import ModuleObject, PatternObject
@@ -31,11 +30,22 @@ class PatternInfo:
         cls._patterns = result
 
     @classmethod
-    def replaceTokens(cls, text: str) -> str:
+    def maskTokens(cls, text: str) -> str:
         for idx, name, pattern in cls._patterns:
-            text = pattern.sub(f"<{name}>", text)
+            # text = pattern.sub(f"<{name}>", text)
+            text = pattern.sub(f"c.o{idx}", text)
         return text
 
+    @classmethod
+    def unmaskTokens(cls, tokens: List[str]) -> List[str]:
+        for idx, token in enumerate(tokens):
+            try:
+                mask = int(token[-1])
+                tokens[idx] = f"<{cls._patterns[mask-1][1]}>"
+            except Exception:
+                continue
+
+        return tokens
     # @classmethod
     # def get(cls) ->  Dict[int, Dict[str, re.Pattern]]:
     #     return cls._patterns
