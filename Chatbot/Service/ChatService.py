@@ -21,9 +21,13 @@ def chat(request: ChatObject, db):
 
         # Step 0: Detect language
         lang = detectlanguage(query)
-        tokens = " ".join(Tokenize(query, lang))
 
-        print(f"Chat.ONE | Tokenization Result: {tokens}")
+        try:
+            tokens = " ".join(Tokenize(query, lang))
+            print(f"Chat.ONE | Tokenization Result: {tokens}")
+        except Exception as e:
+            print(f"Chat.ONE | Language {lang} not supported yet.")
+
         print(f"Chat.ONE | Detected Language: {lang}")
 
         # Step 1: Detect Category
