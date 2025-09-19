@@ -99,76 +99,7 @@ def general_prompt(query, lang):
     {query}    
     """
 
-# ─────────────────────────────────────────────────────────────────────────────
-#   - Prompt for extracting the intent and keywords from the user question -
-#           NO LONGER USED
-# ─────────────────────────────────────────────────────────────────────────────
 
-def policy_intent_prompt(context, query: str) -> str:
-    # {context}
-    #
-
-    return f"""
-    You are an intelligent assistant that analyzes user messages and classifies their intent.
-
-    ### Here is a list of known intents:
-    {str(context)}
-
-    ### Your job:
-    Case 1: If the user's message is semantically close to one of the known intents, return the most relevant intent name from the list as-is.  
-        - The match does not need to be exact.  
-        - If the message can reasonably be understood as a subtype or sub-topic of an existing intent, return that existing intent.
-        - Do NOT choose a general one if a more accurate subtype intent exists.
-
-    Case 2: If the message does not meaningfully relate to any known intent, generate a new intent name in snake_case format.
-        - Only create a new intent when the message introduces a clearly different purpose or topic not covered by the known intents.
-        - The name must describe the message's intent clearly, but not over specific.
-        - The name must be clear and consistent with the known intent naming style.
-        - Use relevant English keywords extracted from the message.
-        - IMPORTANT: Extract important keywords or phrases only from the message that represent the intent, and do not make up any keywords.
-            - Return the keywords as a single lowercase line separated by **one whitespace only** (no commas, no quotes).
-            - Remove stopwords like "can", "please", "I", etc.
-            - IMPORTANT: Replace any detailed or specific data into capitalized token tags surrounded by < and > using the following rules:
-                - `<IPP>` — IP address with port (e.g. 192.168.0.1:443)
-                - `<IP>` — IP address only
-                - `<Port>` — numeric port only
-                - `<FIQ>`, `<BWAY>`, `<R>` — Application number with type code followed by a 17-digit timestamp (e.g. FIQ20250704134526432)
-                - `<URL>` — Any form of URL (e.g. https://..., www..., google.com/...)
-
-    ### Output Format:
-    In case 1, only return the intent name.
-    In case 2, return the result in the following JSON format:
-    {{
-      "intent": "<intent_name>",
-      "keywords": "<keyword1> <keyword2> <keyword3> ..."
-    }}
-
-    ### Example
-    Here are some examples for case 2:
-        - User Message: "Can you give me a list of blacklist policies?"
-        -> Output:
-        {{
-          "intent": "search_blacklist_policy",
-          "keywords": "list blacklist policies"
-        }}
-
-        - User Message: "Can you give me a detailed information about FIQ20250708115117463?"
-        -> Output:
-        {{
-          "intent": "search_firewall_policy_detail",
-          "keywords": "detailed information <FIQ>"
-        }}
-
-        - User Message: "Can you tell me the duration of FIQ20250708115117463?"
-        -> Output:
-        {{
-          "intent": "search_firewall_policy_detail",
-          "keywords": "duration <FIQ>"
-        }}
-
-    Now process this user message. Make sure to always return the result in JSON format. Do not add any additional explanations.
-    \"\"\"{query}\"\"\"
-    """
 
 
 # ─────────────────────────────────────────────────────────────────────────────
