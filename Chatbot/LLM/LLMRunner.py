@@ -64,9 +64,10 @@ def queryApi(db: Session, query: str, intent: str, lang: str):
     # --------------------------------
     print("Chat.ONE | ==== STEP 1 ====")
 
-    # Fetch top 10 matching API from the ChromaDB
+    # Substitute  _ or - with whitespace in 'intent'.
     search = re.sub(r'[_\-]+', ' ', intent).strip()
 
+    # Fetch top 10 matching API from the ChromaDB
     api_list_docs = apiSpecsVectorstore.similarity_search(search, k=10)
     api_list_context = "\n\n".join([doc.page_content for doc in api_list_docs])
 
